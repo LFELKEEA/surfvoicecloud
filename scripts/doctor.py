@@ -3,7 +3,7 @@
     ./.venv/Scripts/python.exe scripts/doctor.py
 
 检查项：
-  1. voxd（8765）在不在、缓存多少
+  1. voxd（8767）在不在、缓存多少
   2. 各引擎能不能用（本地 piper / gsv、云端 cloud、插件 http）
   3. 音色注册表是否合法（引用文件在不在、字段缺不缺）
   4. 冻结音色的基线有没有被改动
@@ -26,7 +26,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).resolve().parent.parent
-BASE = "http://127.0.0.1:8765"
+BASE = "http://127.0.0.1:8767"
 
 OK = "✅"
 WARN = "⚠️ "
@@ -51,7 +51,7 @@ def check_health() -> dict | None:
         h = get("/v1/health")
     except Exception as e:  # noqa: BLE001
         say(BAD, f"voxd 连不上（{BASE}）：{e}")
-        say(WARN, "先双击 run.bat，或检查 8765 端口")
+        say(WARN, "先双击 run.bat，或检查 8767 端口")
         return None
     say(OK, f"voxd 在线，运行 {h.get('uptime_s', '?')} 秒")
     return h

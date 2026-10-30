@@ -1,0 +1,4 @@
+# Windows 批处理必须是 CRLF，且不能被 core.autocrlf 改写：GitHub 的 zip 是直接打包 blob 的，
+# 一旦在仓库里存成 LF，下载解压后 cmd 解析多行 if 块会出问题。
+*.bat -text
+*.cmd -text

@@ -45,6 +45,7 @@ default = "age12-cloud"
 
 ## 注意
 
+- **首次装完要填三样**：AppID / Access Key / 音色 ID（设置页「云端包：密钥与音色」）。缺一样启动会被直接拦下——`voices/age12-cloud/voice.json` 里的 `speaker` 是空的。
 - **必须联网**；火山不可用时只剩 piper 的机械音。
 - 计费按字符，`max_chars` / 桥接侧的字数限制就是你的护栏。
 - `resource` 必须是 `seed-icl-2.0`（换成 `seed-tts-2.0` 会报 55000000）。

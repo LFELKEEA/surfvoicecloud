@@ -6,12 +6,69 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
+import os
+import shutil
+import tempfile
 import wave
+from pathlib import Path
 
 import numpy as np
 
 from .base import Caps, EngineError
+
+
+def _ascii_mirrors(src: Path) -> list[Path]:
+    """给 espeak 数据目录准备几个「纯 ASCII」的落点，按优先级排。"""
+    tag = hashlib.md5(str(src).encode("utf-8", "replace")).hexdigest()[:8]
+    roots = []
+    override = os.environ.get("SURFCORE_ESPEAK_DATA")
+    if override:
+        roots.append(Path(override))
+    for env in ("ProgramData", "PUBLIC"):
+        base = os.environ.get(env)
+        if base:
+            roots.append(Path(base) / "surfcore")
+    roots.append(Path(os.environ.get("SystemDrive", "C:") + "\\surfcore-cache"))
+    try:
+        roots.append(Path(tempfile.gettempdir()) / "surfcore")
+    except Exception:  # noqa: BLE001 - 临时目录不可用时只是少一个落点
+        pass
+    return [r / f"espeak-ng-data-{tag}" for r in roots]
+
+
+def espeak_data_dir(src: Path) -> Path:
+    """返回能让 espeak-ng 正常初始化的 data 目录。
+
+    2026-10-30 实测：espeak-ng 处理不了非 ASCII 的 data 路径。装在
+    `D:\\...\\工作区\\...` 这类目录时，`initialize()` 会失败、回落到编译期路径
+    `D:/a/piper1-gpl/...`，打印一行 No such file or directory 后 **直接 exit()**，
+    整个 voxd 进程跟着消失（一次 huayan 请求就能把 8765 打挂）。
+
+    这里把 espeak-ng-data 镜像到纯 ASCII 目录再用；镜像也失败就抛错，让这个引擎
+    停在 `error` 状态，而不是等到合成时才把进程带走。
+    """
+    if str(src).isascii() or not src.exists():
+        return src
+    last_error: Exception | None = None
+    for dst in _ascii_mirrors(src):
+        if not str(dst).isascii():  # 临时目录也可能带中文用户名
+            continue
+        try:
+            marker = dst / ".mirrored-from"
+            if marker.exists() and marker.read_text(encoding="utf-8", errors="ignore") == str(src):
+                return dst
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+            marker.write_text(str(src), encoding="utf-8")
+            return dst
+        except Exception as e:  # noqa: BLE001 - 换下一个落点
+            last_error = e
+    raise EngineError(
+        f"espeak 数据在含非 ASCII 的路径（{src}），镜像到 ASCII 目录失败"
+        f"（{last_error}）。请把语音包装到纯英文路径，或设置环境变量 "
+        f"SURFCORE_ESPEAK_DATA 指向一个 ASCII 目录。"
+    )
 
 
 class PiperEngine:
@@ -29,7 +86,22 @@ class PiperEngine:
             from piper import PiperVoice
         except Exception as e:  # noqa: BLE001
             raise EngineError(f"piper 未安装：{e}") from e
+        data_dir = None
         try:
+            from piper.phonemize_espeak import ESPEAK_DATA_DIR
+        except ImportError:
+            data_dir = None  # 老版本 piper 没有这个模块
+        else:
+            data_dir = espeak_data_dir(Path(ESPEAK_DATA_DIR))
+        try:
+            if data_dir is not None:
+                self.voice = PiperVoice.load(
+                    self.model_path, config_path=self.config_path, espeak_data_dir=str(data_dir)
+                )
+            else:
+                self.voice = PiperVoice.load(self.model_path, config_path=self.config_path)
+        except TypeError:
+            # 老版本 piper 没有 espeak_data_dir 参数
             self.voice = PiperVoice.load(self.model_path, config_path=self.config_path)
         except Exception as e:  # noqa: BLE001
             raise EngineError(f"加载 piper 模型失败（{self.model_path}）：{e}") from e

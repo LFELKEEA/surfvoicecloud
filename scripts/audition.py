@@ -4,7 +4,7 @@
 顺带验证 HTTP 路由、标签、缓存。
 
     .venv\\Scripts\\python scripts/audition.py
-    .venv\\Scripts\\python scripts/audition.py --voices huayan,vivian --base-url http://127.0.0.1:8765
+    .venv\\Scripts\\python scripts/audition.py --voices huayan,vivian --base-url http://127.0.0.1:8767
 """
 
 from __future__ import annotations
@@ -151,7 +151,7 @@ def rebuild_index(out: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base-url", default="http://127.0.0.1:8765")
+    ap.add_argument("--base-url", default="http://127.0.0.1:8767")
     ap.add_argument("--voices", default=",".join(DEFAULT_VOICES))
     ap.add_argument("--out", default="audition")
     ap.add_argument("--rebuild-index", action="store_true", help="只从已有 wav 重建页面，不重新合成")

@@ -29,7 +29,7 @@ import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_BASE = "http://127.0.0.1:8765"
+DEFAULT_BASE = "http://127.0.0.1:8767"
 
 
 def synth(text: str, voice: str, base: str, timeout: float) -> bytes:

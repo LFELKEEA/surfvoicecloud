@@ -1,0 +1,12 @@
+{
+  "engine": "piper",
+  "desc": "Piper 中文女声（huayan-medium，CPU 实时）。不能克隆、不控情绪，永远能用",
+  "speed": 1.0,
+  "default_style": {
+    "tags": [],
+    "intensity": 0.5,
+    "rate": 1.0,
+    "pitch": 0.0
+  },
+  "cosy_twin": "huayan-cosy"
+}

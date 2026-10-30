@@ -4,7 +4,6 @@ cache/
 logs/
 dataset/
 audition/
-voices/
 voicepack/
 tools/
 *.log
@@ -13,3 +12,9 @@ run.pid
 config.toml
 .DS_Store
 Thumbs.db
+
+# 音色定义必须进仓库：发布包里没有 voices/ 就会装完 503（2026-10-30 云端包事故）。
+# 参考音频和用户自己建的音色仍然忽略。
+voices/*
+!voices/*/
+!voices/*/voice.json
